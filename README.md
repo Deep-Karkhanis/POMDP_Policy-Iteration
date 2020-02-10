@@ -44,7 +44,7 @@ To solve any problem:
    script.sh [1] [2] [3] [4]
 ```
 
-   *``[1]``: problem-name
-   *``[2]``: Re-make AIToolbox (0/1)
-   *``[3]``: Recompile problem file (0/1)
-   *``[4]``: Run for multiple epochs (0/1)
+   * ``[1]`` problem-name
+   * ``[2]`` Re-make AIToolbox (0/1)
+   * ``[3]`` Recompile problem file (0/1)
+   * ``[4]`` Run for multiple epochs (0/1)
