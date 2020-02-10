@@ -1,0 +1,27 @@
+algo
+reward_runs (noof expts)
+discount
+inphorizon
+test_horizon
+inpnBel
+iters
+states
+acts
+observs
+
+transitions a,s,s
+observations a,s,o final state, action on getting there
+reward s1,s2,a
+fsc old
+belief
+
+custom_fsc?
+howard?
+branching fact
+node limit
+
+describe fsc
+..
+....
+...
+

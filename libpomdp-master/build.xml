@@ -1,0 +1,182 @@
+<!--  ******************************************************************************* -->
+<!--  * libpomdp                                                                      -->
+<!--  * ========                                                                      -->
+<!--  * File: build.xml                                                               -->
+<!--  * Description:                                                                  -->
+<!--  * Copyright (c) 2008, 2010 Diego Maniloff                                       -->
+<!--  * W3: http://www.cs.uic.edu/~dmanilof                                           -->
+<!--  ******************************************************************************* -->
+
+<project name="libpomdp" default="dist">
+    <description>
+        build file
+    </description>
+
+  <!-- set global properties for this build -->
+  <property name="src"     location="src/java"/>
+  <property name="build"   location="build"/>
+  <property name="dist"    location="dist"/>
+  <property name="lib"     location="external"/>
+
+<!-- external libraries classpath -->
+  <path id="classpath">
+    <fileset dir="${lib}" />
+    <fileset dir="."      />
+  </path>
+
+  <!-- default excludes -->
+  <defaultexcludes add="**/bak/*"/>
+  <defaultexcludes add=".git/**"/>
+
+  <target name="init">
+    <!-- Create the time stamp -->
+    <tstamp/>
+    <!-- Create the build directory structure used by compile -->
+    <mkdir dir="${build}"/>
+  </target>
+
+  <target name="parser" depends ="init">
+    <!-- ANTRL is called with a java task, this should be changed to use antlr  -->
+    <java classname="org.antlr.Tool" classpathref="classpath">
+	<arg value="${src}/libpomdp/parser/DotPomdp.g"/>
+    </java>
+    <java classname="org.antlr.Tool" classpathref="classpath">
+	<arg value="${src}/libpomdp/parser/DotAlpha.g"/>
+    </java>
+  </target>
+
+<target name="offlinetest">
+  	 <echo message="Running Spaan's Perseus Algorithm"/>
+    <exec executable="java">
+      <arg value="-Djava.library.path=/usr/lib/jni"/>
+      <arg value="-classpath"/>
+      <arg value="lib/*:dist/*"/>
+      <arg value="libpomdp.test.PerseusTest"/>
+	</exec>
+    <echo message="Running Pineu's PBVI (standard) Algorithm"/>
+    <exec executable="java">
+      <arg value="-Djava.library.path=/usr/lib/jni"/>
+      <arg value="-classpath"/>
+      <arg value="lib/*:dist/*"/>
+      <arg value="libpomdp.test.PbviTest"/>
+	</exec>
+  	 <echo message="Running Spaan's Perseus (dynPoints) Algorithm"/>
+    <exec executable="java">
+      <arg value="-Djava.library.path=/usr/lib/jni"/>
+      <arg value="-classpath"/>
+      <arg value="lib/*:dist/*"/>
+      <arg value="libpomdp.test.PerseusDynamicTest"/>
+	</exec>
+    <echo message="Running Pineu's PBVI (SSRA-fast) Algorithm"/>
+    <exec executable="java">
+      <arg value="-Djava.library.path=/usr/lib/jni"/>
+      <arg value="-classpath"/>
+      <arg value="lib/*:dist/*"/>
+      <arg value="libpomdp.test.PbviFastTest"/>
+	</exec>
+  	 <echo message="Running Cassandra's Incremental Pruning Exact Algorithm"/>
+    <exec executable="java">
+      <arg value="-Djava.library.path=/usr/lib/jni"/>
+      <arg value="-classpath"/>
+      <arg value="lib/*:dist/*"/>
+      <arg value="libpomdp.test.IncrementalPruningTest"/>
+	</exec>
+  	 <echo message="Running Monahan's Batch Enumeration Exact Algorithm"/>
+    <exec executable="java">
+      <arg value="-Djava.library.path=/usr/lib/jni"/>
+      <arg value="-classpath"/>
+      <arg value="lib/*:dist/*"/>
+      <arg value="libpomdp.test.BatchEnumerationTest"/>
+	</exec>
+  	 <echo message="Running Sondik's One Pass Exact Algorithm"/>
+    <java classname="libpomdp.test.OnePassTest" classpathref="classpath"/>
+  </target>
+
+  <target name="stdboundstest" depends="dist">
+    <echo message="Running STD Blind Policy Value Iteration..."/>
+    <java classname="libpomdp.test.BpviTestStd" classpathref="classpath"/>
+    <echo message="Running STD QMDP Value Iteration..."/>
+    <java classname="libpomdp.test.QmdpTestStd" classpathref="classpath"/>
+  </target>
+
+  <target name="addboundstest" depends="dist">
+    <echo message="Running ADD Blind Policy Value Iteration..."/>
+    <java classname="libpomdp.test.BpviTestAdd" classpathref="classpath"/>
+    <echo message="Running ADD QMDP Value Iteration..."/>
+    <java classname="libpomdp.test.QmdpTestAdd" classpathref="classpath"/>
+  </target>
+
+  <target name="rhotest">
+   <!-- <echo message="Running RHO PBVI Algorithm"/>
+    <exec executable="java">
+      <arg value="-Djava.library.path=/usr/lib/jni"/>
+      <arg value="-classpath"/>
+      <arg value="lib/*:dist/*"/>
+      <arg value="libpomdp.test.RhoPbviTest"/>
+	</exec>
+    <echo message="Running Pineu's PBVI (standard) Algorithm"/>
+    <exec executable="java">
+      <arg value="-Djava.library.path=/usr/lib/jni"/>
+      <arg value="-classpath"/>
+      <arg value="lib/*:dist/*"/>
+      <arg value="libpomdp.test.PbviTest"/>
+	</exec>-->
+  	 <echo message="Running Cassandra's Incremental Pruning Exact Algorithm"/>
+    <exec executable="java">
+      <arg value="-Djava.library.path=/usr/lib/jni"/>
+      <arg value="-classpath"/>
+      <arg value="lib/*:dist/*"/>
+      <arg value="libpomdp.test.IncrementalPruningTest"/>
+	</exec>
+  	 <echo message="Running RHO IP Algorithm"/>
+    <exec executable="java">
+      <arg value="-Djava.library.path=/usr/lib/jni"/>
+      <arg value="-classpath"/>
+      <arg value="lib/*:dist/*"/>
+      <arg value="libpomdp.test.RhoIncrementalPruningTest"/>
+	</exec>
+  </target>
+
+
+  <target name="compile" depends="parser"
+	  description="compile the source " >
+    <!-- Compile the java code from ${src} into ${build} -->
+    <javac srcdir="${src}" destdir="${build}" classpathref="classpath" includeantruntime="false" debug="on" debuglevel="lines,vars,source"/>
+  </target>
+
+  <target name="dist" depends="compile"
+        description="generate the distribution" >
+    <!-- Create the distribution directory -->
+    <mkdir dir="${dist}"/>
+    <!-- Put everything in ${build} into the MyProject-${DSTAMP}.jar file -->
+    <jar jarfile="${dist}/${ant.project.name}.jar" basedir="${build}"/>
+  </target>
+
+    <target name="javadoc">
+      <javadoc
+	  access="public"
+	  author="true"
+	  classpath="external/netlib-java-0.9.1.jar:external/ujmp-complete-0.2.4.jar:external/mtj-0.9.12.jar:external/glpk-java.jar:external/arpack_combo-0.1.jar:external/antlr-3.2.jar:external/jmatharray.jar"
+	  destdir="doc"
+	  doctitle="libpomdp"
+	  nodeprecated="false"
+	  nodeprecatedlist="false"
+	  noindex="false"
+	  nonavbar="false"
+	  notree="false"
+	  packagenames="java.libpomdp.solve.online,libpomdp.online.java,libpomdp.common.java,libpomdp.problems.catchproblem.java,libpomdp.parser.java,libpomdp.common.java.add,java.libpomdp.parser,libpomdp.common.java.standard,libpomdp.offline.java,libpomdp.problems.rocksample.java,libpomdp.hybrid.java"
+	  source="1.6"
+	  sourcepath="src"
+	  splitindex="true"
+	  use="true"
+	  version="true"/>
+    </target>
+
+
+  <target name="clean"
+        description="clean up" >
+    <!-- Delete the ${build} and ${dist} directory trees -->
+    <delete dir="${build}"/>
+    <delete dir="${dist}"/>
+  </target>
+</project>
