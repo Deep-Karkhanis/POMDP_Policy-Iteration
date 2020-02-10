@@ -1,13 +1,16 @@
 # POMDP_Policy-Iteration
 Uses Finite State Controller (FSC) architecture to solve the infinite horizon reward maximization problem for POMDPs.
 
-This solver is built of top of the [https://github.com/Svalorzen/AI-Toolbox](AIToolbox) by [https://github.com/Svalorzen](Svalrozen)
+This solver is built of top of the [AIToolbox](https://github.com/Svalorzen/AI-Toolbox) by [Svalrozen](https://github.com/Svalorzen)
+
+```
   cd AI-Toolbox-master
   mkdir build
   cd build/
   cmake ..
   make
-  
+```
+
 cmake can be called with a series of flags in order to customize the output, f building everything is not desirable. 
 The following flags are available:
 
