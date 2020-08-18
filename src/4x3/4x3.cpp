@@ -6,7 +6,7 @@
 #include <chrono>
 #include <AIToolbox/POMDP/Model.hpp>
 #include <AIToolbox/MDP/Model.hpp>
-
+#include <Eigen/Core>
 #include <AIToolbox/POMDP/Algorithms/IncrementalPruning.hpp>
 #include <AIToolbox/POMDP/Algorithms/PolicyIteration.hpp>
 #include <AIToolbox/POMDP/Algorithms/PBVI.hpp>
@@ -25,10 +25,10 @@ inline AIToolbox::POMDP::Model<AIToolbox::MDP::Model> makeProblem(int s,int a,in
 
     for ( size_t a = 0; a < A; ++a ){
         for ( size_t s1 = 0; s1 < S; ++s1 ){
-            for ( size_t s2 = 0; s2 < S; ++s2 ){    
+            for ( size_t s2 = 0; s2 < S; ++s2 ){
                 std::cin>>transitions[s1][a][s2];
-            }       
-        }        
+            }
+        }
     }
             // std::cout<<"chkpC"<<std::flush;
 
@@ -43,48 +43,51 @@ inline AIToolbox::POMDP::Model<AIToolbox::MDP::Model> makeProblem(int s,int a,in
     double rew;
     for ( size_t s = 0; s < S; ++s ) {
         std::cin>>rew;
-        for ( size_t a = 0; a < A; ++a ){    
+        for ( size_t a = 0; a < A; ++a ){
             for ( size_t s1 = 0; s1 < S; ++s1 ) {
                 rewards[s1][a][s]=rew;
-            }            
-        }   
+            }
+        }
     }
 
     model.setTransitionFunction(transitions);
     model.setRewardFunction(rewards);
             // std::cout<<"chkpC"<<std::flush;
-    
+
     model.setObservationFunction(observations);
     return model;
 }
-int main(int argc, char const *argv[]) {    
+int main(int argc, char const *argv[]) {
     int states,observs,acts,algo,inphorizon, test_horizon,inpnBel,iters,reward_runs;
     double discount;
-    // std::cin>>algo
-            // >>reward_runs
-            // >>discount
-            // >>inphorizon>>test_horizon
-            // >>inpnBel
-            // >>iters
-            // >>states>>acts>>observs;
+    std::cin>>algo
+            >>reward_runs // number of times to reapeat the experiment
+            >>discount
+            >>inphorizon>>test_horizon
+            // inphorizon = test_horizon for algo = 3.
+            >>inpnBel
+            // don't know
+            >>iters
+            // Max number of planning iterations
+            >>states>>acts>>observs;
     // std::cout<<discount<<std::flush;
 
-    system("mkdir dummy");
-    exit(0);
+    // system("mkdir dummy");
+    // exit(0);
 
-    auto model  = makeProblem(states,acts,observs);;
+    auto model  = makeProblem(states,acts,observs);
     auto start = std::chrono::high_resolution_clock::now();
-    unsigned horizon = inphorizon;        
-    
+    unsigned horizon = inphorizon;
+
     // create a random engine, since we will need this later.
     // Create model of the problem.
     // std::cout<<"Done1"<<std::flush;
     model.setDiscount(discount);
-    
-    AIToolbox::POMDP::Belief b(states);     
-    // std::cout<<"Done1"<<std::flush;    
+
+    AIToolbox::POMDP::Belief b(states);
+    // std::cout<<"Done1"<<std::flush;
     for(int belInd=0;belInd<states;belInd++)
-    { 
+    {
         std::cin>>b(belInd,0);
         // std::cout<<"bb"<<b(belInd,0)<<" "<<std::flush;
     }
@@ -96,7 +99,7 @@ int main(int argc, char const *argv[]) {
         auto solution = solver(model);
         // std::cout<<"Done";
         AIToolbox::POMDP::Policy policy(states, acts, observs, std::get<1>(solution));
-        
+
         double totalReward = 0.0;
         for(int runs=0;runs<reward_runs;runs++)
         {
@@ -105,7 +108,7 @@ int main(int argc, char const *argv[]) {
             auto a_id = policy.sampleAction(b, horizon);
             // std::cout<<"Done1"<<std::flush;
 
-            for (int t = test_horizon - 1; t >= 0; --t) 
+            for (int t = test_horizon - 1; t >= 0; --t)
             {
             // std::cout<<"Done1"<<std::flush;
                 auto currA = std::get<0>(a_id);
@@ -127,14 +130,14 @@ int main(int argc, char const *argv[]) {
     {
         AIToolbox::POMDP::POMCP solver(model,inpnBel,iters,10000);
 
-        double totalReward = 0.0;        
+        double totalReward = 0.0;
         for(int runs=0;runs<reward_runs;runs++)
         {
             std::default_random_engine rand(AIToolbox::Impl::Seeder::getSeed());
             auto s = AIToolbox::sampleProbability(states, b, rand);
             auto a_id = solver.sampleAction(b, horizon);
 
-            for (int t = horizon - 1; t >= 0; --t) 
+            for (int t = horizon - 1; t >= 0; --t)
             {
                 auto currA = (a_id);
                 auto s1_o_r = model.sampleSOR(s, currA);
@@ -142,7 +145,7 @@ int main(int argc, char const *argv[]) {
                 totalReward += std::get<2>(s1_o_r);
                 a_id = solver.sampleAction(a_id, currO, t);
                 s = std::get<0>(s1_o_r);
-            }   
+            }
         }
         auto training_time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start).count() / 1000000.;
         std::cout<<"Time = "<<training_time<<"\tAverage Total Reward = "<<(totalReward/reward_runs)<<std::endl;
@@ -153,14 +156,14 @@ int main(int argc, char const *argv[]) {
         auto soln = std::get<1>(solver1(model));
         AIToolbox::POMDP::PIMCP solver(model,inpnBel,iters,10000,soln);
 
-        double totalReward = 0.0;        
+        double totalReward = 0.0;
         for(int runs=0;runs<reward_runs;runs++)
         {
             std::default_random_engine rand(AIToolbox::Impl::Seeder::getSeed());
             auto s = AIToolbox::sampleProbability(states, b, rand);
             auto a_id = solver.sampleAction(b, horizon);
 
-            for (int t = horizon - 1; t >= 0; --t) 
+            for (int t = horizon - 1; t >= 0; --t)
             {
                 auto currA = (a_id);
                 auto s1_o_r = model.sampleSOR(s, currA);
@@ -168,16 +171,16 @@ int main(int argc, char const *argv[]) {
                 totalReward += std::get<2>(s1_o_r);
                 a_id = solver.sampleAction(a_id, currO, t);
                 s = std::get<0>(s1_o_r);
-            }   
+            }
         }
         auto training_time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start).count() / 1000000.;
-        std::cout<<"Time = "<<training_time<<"\tAverage Total Reward = "<<(totalReward/reward_runs)<<std::endl;    
+        std::cout<<"Time = "<<training_time<<"\tAverage Total Reward = "<<(totalReward/reward_runs)<<std::endl;
     }
     else
-    { 
+    {
         for(int super_rn =0 ;super_rn<1;super_rn++)
         {
-            double totalReward = 0.0;               
+            double totalReward = 0.0;
             AIToolbox::POMDP::PolicyIteration solver(iters,0.0,b);
             // std::cout<<"chkp2"<<std::flush;
 
@@ -193,14 +196,14 @@ int main(int argc, char const *argv[]) {
                 int bAct=solution[0][0].action;
                 for(int alpInd=0;alpInd<(int)(solution[0].size());alpInd++)
                 {
-                    double val = (solution[0][alpInd].values.dot(b)); 
+                    double val = (solution[0][alpInd].values.dot(b));
                     if(maxExp < val)
                     {
                         maxExp = val;
                         bAct = (solution[0][alpInd].action);
                     }
                 }
-                
+
                 // std::cout<<"chkp4"<<std::flush;
 
                 for (int t = test_horizon - 1; t >= 0; --t) {
@@ -239,7 +242,7 @@ int main(int argc, char const *argv[]) {
                     bAct=solution[0][0].action;
                     for(int alpInd=0;alpInd<(int)(solution[0].size());alpInd++)
                     {
-                        double val = (solution[0][alpInd].values.dot(b)); 
+                        double val = (solution[0][alpInd].values.dot(b));
                         if(maxExp < val)
                         {
                             maxExp = val;
@@ -254,21 +257,21 @@ int main(int argc, char const *argv[]) {
                 }
             }
             // std::cout<<"chkp5"<<std::flush;
-            
+
             double maxExp=solution[0][0].values.dot(b);
             for(int alpInd=0;alpInd<(int)(solution[0].size());alpInd++)
             {
-                double val = (solution[0][alpInd].values.dot(b)); 
+                double val = (solution[0][alpInd].values.dot(b));
                 if(maxExp < val)
                     maxExp = val;
             }
-                    
+
             auto training_time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start).count() / 1000000.;
             std::cout<<"Time = "<<training_time<<"\tAverage Total Reward = "<<(totalReward/(reward_runs))<<std::endl;
             std::cout<<"Expected Reward = "<<maxExp<<std::endl;
         }
 
-        
+
     }
     return 0;
 }

@@ -1,3 +1,17 @@
+/* This file contains the code that is presented in the TutorialPOMDP.md file
+ * in the docs folder. The tutorial can also be viewed in the main page of the
+ * doxygen documentation.
+ *
+ * This code implements a problem where the agent, standing in front of two
+ * doors, must figure out which of the two is hiding a treasure. The problem is
+ * that behind the other door there is a tiger! The agent must thus wait and
+ * listen for noise, and try to figure out with enough certainty which door is
+ * safe to open.
+ *
+ * For more examples be sure to check out the "tests" folder! The code there
+ * is very simple and it contains most usages of this library ever, and it will
+ * probably give you an even better introduction than this code does.
+ */
 #include <iostream>
 #include <vector>
 #include <string>
@@ -9,11 +23,6 @@
 
 #include <AIToolbox/POMDP/Algorithms/IncrementalPruning.hpp>
 #include <AIToolbox/POMDP/Policies/Policy.hpp>
-
-
-#include <AIToolbox/POMDP/Algorithms/PolicyIteration.hpp>
-#include <AIToolbox/POMDP/Algorithms/PBVI.hpp>
-#include <AIToolbox/POMDP/Algorithms/POMCP.hpp>
 
 // RENDERING
 
@@ -179,6 +188,34 @@ inline AIToolbox::POMDP::Model<AIToolbox::MDP::Model> makeTigerProblem() {
         rewards[TIG_RIGHT][A_RIGHT][s1] = -100.0;
     }
 
+
+    for ( size_t a = 0; a < A; ++a ){
+        for ( size_t s1 = 0; s1 < S; ++s1 ){
+            for ( size_t s2 = 0; s2 < S; ++s2 ){
+                std::cout<<transitions[s1][a][s2]<<" ";
+            }
+            std::cout<<"\n";
+        }
+    }
+            // std::cout<<"chkpC"<<std::flush;
+
+    for ( size_t a = 0; a < A; ++a )
+        for ( size_t s = 0; s < S; ++s ) {
+            for ( size_t o = 0; o < O; ++o ){
+                 std::cout<<observations[s][a][o]<<" ";    //final state , action and obs on getting there
+            }
+            std::cout<<"\n";
+        }
+            // std::cout<<"chkpC"<<std::flush;
+
+    double rew;
+    for ( size_t a = 0; a < A; ++a ){
+        for ( size_t s = 0; s < S; ++s ) {
+            std::cout<<rewards[s][a][0]<<" ";
+        }
+        std::cout<<"\n";
+    }
+
     model.setTransitionFunction(transitions);
     model.setRewardFunction(rewards);
     model.setObservationFunction(observations);
@@ -194,6 +231,7 @@ int main() {
     auto model = makeTigerProblem();
     model.setDiscount(0.95);
 
+    return 0;
     // Set the horizon. This will determine the optimality of the policy
     // dependent on how many steps of observation/action we plan to do. 1 means
     // we're just going to do one thing only, and we're done. 2 means we get to
